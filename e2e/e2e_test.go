@@ -14,17 +14,32 @@ import (
 func TestCommandLine(t *testing.T) {
 	binary := buildBinary(t)
 	assert.NotNil(t, binary)
-	defer func(name string) {
-		err := os.Remove(fmt.Sprintf("../%s", name))
+	t.Cleanup(func() {
+		err := os.Remove(fmt.Sprintf("../%s", binary))
 		if err != nil {
 			t.Log(err)
 		}
-	}(binary)
+	})
 
-	msg := "Hello Coding Challenges!"
-	stdout, stderr := executeBinary(t, binary, msg)
-	assert.Empty(t, stderr)
-	assert.Equal(t, stdout, fmt.Sprintf("%s\n", msg))
+	tests := map[string]struct {
+		Msg string
+	}{
+		"a message": {
+			Msg: "Hello coding challenges!",
+		},
+		"another message": {
+			Msg: "Hello World!",
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			stdout, stderr := executeBinary(t, binary, test.Msg)
+			assert.Empty(t, stderr)
+			assert.Equal(t, fmt.Sprintf("%s\n", test.Msg), stdout)
+		})
+	}
 }
 
 func buildBinary(t *testing.T) string {
