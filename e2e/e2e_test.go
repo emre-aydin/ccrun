@@ -22,22 +22,51 @@ func TestCommandLine(t *testing.T) {
 	})
 
 	tests := map[string]struct {
-		Msg string
+		Args             []string
+		ExpectedStdout   string
+		ExpectedStderr   string
+		ExpectedExitCode int
 	}{
-		"a message": {
-			Msg: "Hello coding challenges!",
+		"execute run command": {
+			Args:             []string{"run", "echo", "Hello coding challenges!"},
+			ExpectedStdout:   "Hello coding challenges!\n",
+			ExpectedStderr:   "",
+			ExpectedExitCode: 0,
 		},
-		"another message": {
-			Msg: "Hello World!",
+		"execute run with no command": {
+			Args:           []string{"run"},
+			ExpectedStdout: "",
+			ExpectedStderr: "no command to run\n",
+			ExpectedExitCode: 1,
+		},
+		"execute invalid command": {
+			Args:           []string{"exec", "echo", "Hello coding challenges!"},
+			ExpectedStdout: "",
+			ExpectedStderr: "invalid command: exec\n",
+			ExpectedExitCode: 1,
+		},
+		"no command specified": {
+			Args:           []string{},
+			ExpectedStdout: "",
+			ExpectedStderr: "no command specified: valid commands: [run]\n",
+			ExpectedExitCode: 1,
 		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			stdout, stderr := executeBinary(t, binary, test.Msg)
-			assert.Empty(t, stderr)
-			assert.Equal(t, fmt.Sprintf("%s\n", test.Msg), stdout)
+
+			stdout, stderr, err := executeCmd(t, binary, test.Args...)
+			assert.Equal(t, test.ExpectedStdout, stdout)
+			assert.Equal(t, test.ExpectedStderr, stderr)
+			if test.ExpectedExitCode != 0 {
+				var exitError *exec.ExitError
+				assert.ErrorAs(t, err, &exitError)
+				assert.Equal(t, test.ExpectedExitCode, exitError.ExitCode())
+			} else {
+				assert.Nil(t, err)
+			}
 		})
 	}
 }
@@ -54,16 +83,15 @@ func buildBinary(t *testing.T) string {
 	return binary
 }
 
-func executeBinary(t *testing.T, binary, msg string) (string, string) {
+func executeCmd(t *testing.T, binary string, args ...string) (string, string, error) {
 	dir, err := os.Getwd()
 	assert.Nil(t, err)
-	command := exec.Command(filepath.Join(dir, "..", binary), "run", "echo", msg)
+	command := exec.Command(filepath.Join(dir, "..", binary), args...)
 	var stdout, stderr strings.Builder
 	command.Stdout = &stdout
 	command.Stderr = &stderr
 	err = command.Run()
-	assert.Nil(t, err)
-	return stdout.String(), stderr.String()
+	return stdout.String(), stderr.String(), err
 }
 
 func randomString(length int) string {
