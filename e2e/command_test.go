@@ -34,21 +34,21 @@ func TestCommandLine(t *testing.T) {
 			ExpectedExitCode: 0,
 		},
 		"execute run with no command": {
-			Args:           []string{"run"},
-			ExpectedStdout: "",
-			ExpectedStderr: "no command to run\n",
+			Args:             []string{"run"},
+			ExpectedStdout:   "",
+			ExpectedStderr:   "no command to run\n",
 			ExpectedExitCode: 1,
 		},
 		"execute invalid command": {
-			Args:           []string{"exec", "echo", "Hello coding challenges!"},
-			ExpectedStdout: "",
-			ExpectedStderr: "invalid command: exec\n",
+			Args:             []string{"exec", "echo", "Hello coding challenges!"},
+			ExpectedStdout:   "",
+			ExpectedStderr:   "invalid command: exec\n",
 			ExpectedExitCode: 1,
 		},
 		"no command specified": {
-			Args:           []string{},
-			ExpectedStdout: "",
-			ExpectedStderr: "no command specified: valid commands: [run]\n",
+			Args:             []string{},
+			ExpectedStdout:   "",
+			ExpectedStderr:   "no command specified: valid commands: [run]\n",
 			ExpectedExitCode: 1,
 		},
 	}
@@ -57,7 +57,7 @@ func TestCommandLine(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			stdout, stderr, err := executeCmd(t, binary, test.Args...)
+			stdout, stderr, err := executeCmd(binary, test.Args...)
 			assert.Equal(t, test.ExpectedStdout, stdout)
 			assert.Equal(t, test.ExpectedStderr, stderr)
 			if test.ExpectedExitCode != 0 {
@@ -80,17 +80,19 @@ func buildBinary(t *testing.T) string {
 	buildCmd.Stderr = &stderr
 	err := buildCmd.Run()
 	assert.Nil(t, err, "stdout:\n%s\nstderr:%s\n", stdout.String(), stderr.String())
-	return binary
+
+	wd, err := os.Getwd()
+	assert.Nil(t, err)
+
+	return filepath.Join(wd, "..", binary)
 }
 
-func executeCmd(t *testing.T, binary string, args ...string) (string, string, error) {
-	dir, err := os.Getwd()
-	assert.Nil(t, err)
-	command := exec.Command(filepath.Join(dir, "..", binary), args...)
+func executeCmd(binary string, args ...string) (string, string, error) {
+	command := exec.Command(binary, args...)
 	var stdout, stderr strings.Builder
 	command.Stdout = &stdout
 	command.Stderr = &stderr
-	err = command.Run()
+	err := command.Run()
 	return stdout.String(), stderr.String(), err
 }
 
