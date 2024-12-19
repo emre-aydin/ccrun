@@ -1,7 +1,6 @@
 package e2e_test
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"os/exec"
@@ -13,7 +12,7 @@ func TestHostname(t *testing.T) {
 	binary := buildBinary(t)
 	assert.NotNil(t, binary)
 	t.Cleanup(func() {
-		err := os.Remove(fmt.Sprintf("../%s", binary))
+		err := os.Remove(binary)
 		if err != nil {
 			t.Log(err)
 		}

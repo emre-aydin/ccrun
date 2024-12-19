@@ -15,7 +15,7 @@ func TestCommandLine(t *testing.T) {
 	binary := buildBinary(t)
 	assert.NotNil(t, binary)
 	t.Cleanup(func() {
-		err := os.Remove(fmt.Sprintf("../%s", binary))
+		err := os.Remove(binary)
 		if err != nil {
 			t.Log(err)
 		}
