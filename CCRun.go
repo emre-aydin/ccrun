@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"syscall"
 )
 
@@ -25,7 +26,7 @@ func main() {
 		// replace 'run' with 'wrap-run' to start the new process in a new UTS namespace
 		args[0] = "wrap-run"
 		cmd := exec.Command(os.Args[0], args...)
-		cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+		cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 		cmd.SysProcAttr = &syscall.SysProcAttr{
 			Cloneflags: syscall.CLONE_NEWUTS,
 		}
@@ -40,8 +41,19 @@ func main() {
 			exitWithError(err)
 		}
 
+		wd, err := os.Getwd()
+		if err != nil {
+			exitWithError(err)
+		}
+
+		err = syscall.Chroot(filepath.Join(wd, "alpine-minirootfs-3.21.0-x86_64"))
+		if err != nil {
+			exitWithError(err)
+		}
+
 		cmd := exec.Command(args[1], args[2:]...)
-		cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+		cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
+		cmd.Dir = "/"
 		err = cmd.Run()
 		if err != nil {
 			exitWithError(err)
