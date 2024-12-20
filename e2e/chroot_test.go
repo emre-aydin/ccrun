@@ -19,28 +19,12 @@ func TestChroot(t *testing.T) {
 	})
 
 	var stdout, stderr strings.Builder
-	lsCurDirCmd := exec.Command(binary, "run", "ls")
-	lsCurDirCmd.Stdout = &stdout
-	lsCurDirCmd.Stderr = &stderr
+	cmd := exec.Command(binary, "run", "/bin/busybox", "ls")
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 
-	err := lsCurDirCmd.Run()
+	err := cmd.Run()
 	assert.Nil(t, err)
-	assert.Empty(t, err)
-	curDirContent := stdout.String()
-
-	lsParentDirCmd := exec.Command(binary, "run", "ls", "..")
-	lsParentDirCmd.Stdout = &stdout
-	lsParentDirCmd.Stderr = &stderr
-
-	err = lsParentDirCmd.Run()
-	assert.Nil(t, err)
-	assert.Empty(t, err)
-
-	parentDirContent := stdout.String()
-	assert.Equal(t, curDirContent, parentDirContent)
-
-	t.Log("cur dir content")
-	t.Log(curDirContent)
-	t.Log("parent dir content")
-	t.Log(parentDirContent)
+	assert.Empty(t, stderr.String())
+	assert.Contains(t, stdout.String(), "ALPINE_FS_ROOT")
 }

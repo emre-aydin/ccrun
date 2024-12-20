@@ -19,7 +19,7 @@ func TestHostname(t *testing.T) {
 	})
 
 	var stdout, stderr strings.Builder
-	cmd := exec.Command(binary, "run", "hostname")
+	cmd := exec.Command(binary, "run", "/bin/busybox", "hostname")
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 

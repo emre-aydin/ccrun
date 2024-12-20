@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"syscall"
 )
+
+const ALPINE_ROOT_FS = "/home/emre/projects/ccrun/alpine-minirootfs-3.21.0-x86_64"
 
 func main() {
 	if len(os.Args) == 1 {
@@ -41,18 +42,11 @@ func main() {
 			exitWithError(err)
 		}
 
-		wd, err := os.Getwd()
-		if err != nil {
-			exitWithError(err)
-		}
-
-		err = syscall.Chroot(filepath.Join(wd, "alpine-minirootfs-3.21.0-x86_64"))
-		if err != nil {
-			exitWithError(err)
-		}
-
 		cmd := exec.Command(args[1], args[2:]...)
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			Chroot: ALPINE_ROOT_FS,
+		}
 		cmd.Dir = "/"
 		err = cmd.Run()
 		if err != nil {

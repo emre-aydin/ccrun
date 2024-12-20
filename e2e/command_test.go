@@ -28,7 +28,7 @@ func TestCommandLine(t *testing.T) {
 		ExpectedExitCode int
 	}{
 		"execute run command": {
-			Args:             []string{"run", "echo", "Hello coding challenges!"},
+			Args:             []string{"run", "/bin/busybox", "echo", "Hello coding challenges!"},
 			ExpectedStdout:   "Hello coding challenges!\n",
 			ExpectedStderr:   "",
 			ExpectedExitCode: 0,
