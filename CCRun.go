@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"syscall"
 )
 
@@ -29,7 +30,7 @@ func main() {
 		cmd := exec.Command(os.Args[0], args...)
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 		cmd.SysProcAttr = &syscall.SysProcAttr{
-			Cloneflags: syscall.CLONE_NEWUTS,
+			Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID,
 		}
 
 		err := cmd.Run()
@@ -38,6 +39,16 @@ func main() {
 		}
 	case "wrap-run":
 		err := syscall.Sethostname([]byte("container"))
+		if err != nil {
+			exitWithError(err)
+		}
+
+		err = syscall.Mount("/proc", filepath.Join(ALPINE_ROOT_FS, "proc"), "proc", 0, "")
+		if err != nil {
+			exitWithError(err)
+		}
+
+		err = syscall.Unshare(syscall.CLONE_NEWNS)
 		if err != nil {
 			exitWithError(err)
 		}
