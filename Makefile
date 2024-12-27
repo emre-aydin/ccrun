@@ -1,4 +1,4 @@
-.PHONY: clean ps umount shell build
+.PHONY: clean ps umount shell build test
 
 build:
 	go build
@@ -13,3 +13,6 @@ shell:
 
 clean:
 	go clean
+
+test:
+	sudo go test ./...
