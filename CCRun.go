@@ -30,7 +30,10 @@ func main() {
 		cmd := exec.Command(os.Args[0], args...)
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 		cmd.SysProcAttr = &syscall.SysProcAttr{
-			Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID,
+			Cloneflags: syscall.CLONE_NEWUSER | syscall.CLONE_NEWNS | syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID,
+			UidMappings: []syscall.SysProcIDMap{
+				{ContainerID: 0, HostID: 1000, Size: 1},
+			},
 		}
 
 		err := cmd.Run()
@@ -38,17 +41,14 @@ func main() {
 			exitWithError(err)
 		}
 	case "wrap-run":
-		err := syscall.Sethostname([]byte("container"))
+		var err error
+
+		err = syscall.Sethostname([]byte("container"))
 		if err != nil {
 			exitWithError(err)
 		}
 
 		err = syscall.Mount("/proc", filepath.Join(ALPINE_ROOT_FS, "proc"), "proc", 0, "")
-		if err != nil {
-			exitWithError(err)
-		}
-
-		err = syscall.Unshare(syscall.CLONE_NEWNS)
 		if err != nil {
 			exitWithError(err)
 		}

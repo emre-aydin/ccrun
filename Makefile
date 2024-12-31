@@ -9,7 +9,7 @@ ps:
 
 shell:
 	sudo mount --make-rprivate /
-	sudo ./ccrun run /bin/busybox sh
+	./ccrun run /bin/busybox sh
 
 clean:
 	go clean
