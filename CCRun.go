@@ -9,7 +9,7 @@ import (
 	"syscall"
 )
 
-const ALPINE_ROOT_FS = "/home/emre/projects/ccrun/alpine-minirootfs-3.21.0-x86_64"
+const AlpineRootFs = "/home/emre/projects/ccrun/alpine"
 
 func main() {
 	if len(os.Args) == 1 {
@@ -35,6 +35,11 @@ func main() {
 				{ContainerID: 0, HostID: 1000, Size: 1},
 			},
 		}
+		//err := createCgroup("my-container")
+		//if err != nil {
+		//	exitWithError(err)
+		//}
+		//defer deleteCgroup("my-container")
 
 		err := cmd.Run()
 		if err != nil {
@@ -48,7 +53,7 @@ func main() {
 			exitWithError(err)
 		}
 
-		err = syscall.Mount("/proc", filepath.Join(ALPINE_ROOT_FS, "proc"), "proc", 0, "")
+		err = syscall.Mount("/proc", filepath.Join(AlpineRootFs, "proc"), "proc", 0, "")
 		if err != nil {
 			exitWithError(err)
 		}
@@ -56,7 +61,7 @@ func main() {
 		cmd := exec.Command(args[1], args[2:]...)
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 		cmd.SysProcAttr = &syscall.SysProcAttr{
-			Chroot: ALPINE_ROOT_FS,
+			Chroot: AlpineRootFs,
 		}
 		cmd.Dir = "/"
 		err = cmd.Run()
@@ -77,4 +82,13 @@ func exitWithError(err error) {
 		exitCode = exitError.ExitCode()
 	}
 	os.Exit(exitCode)
+}
+
+func createCgroup(name string) error {
+	err := os.Mkdir(fmt.Sprintf("/sys/fs/cgroup/%s", name), 0750)
+	return err
+}
+
+func deleteCgroup(name string) error {
+	return os.RemoveAll(fmt.Sprintf("/sys/fs/cgroup/%s", name))
 }
